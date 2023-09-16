@@ -1,0 +1,8 @@
+mongodb:
+  uri: mongodb://localhost:27017
+  database: nestbox
+httpserver:
+  ip: 127.0.0.1
+  port: "8080"
+images:
+  directory: /home/doerig/temp/nestbox_images
