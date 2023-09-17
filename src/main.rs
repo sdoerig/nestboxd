@@ -33,7 +33,7 @@ impl ServiceContainer {
             breed: BreedService::new(&db),
             bird: BirdService::new(&db),
             geolocation: GeolocationService::new(&db),
-            image: ImageService::new(image_directory),
+            image: ImageService::new(image_directory, &db),
         }
     }
 }

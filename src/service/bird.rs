@@ -7,7 +7,7 @@ use super::{
 use crate::controller::utilities::{PagingQuery, SessionObject};
 use mongodb::{error::Error, Collection, Database};
 
-const BIRDS: &str = "birds";
+pub(crate) const BIRDS: &str = "birds";
 
 #[derive(Clone)]
 pub struct BirdService {

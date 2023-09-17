@@ -7,6 +7,7 @@ use crate::{
         error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR},
         req_structs::UploadForm,
     },
+    service::image::CollectionsWithImages,
     ServiceContainer,
 };
 
@@ -42,13 +43,22 @@ pub async fn nestboxes_images_post(
 ) -> impl Responder {
     let session_uuid = parse_auth_header(&req);
     let session = app_data.session.validate_session(&session_uuid).await;
+
     if !nestbox_req.is_valid() {
         return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST));
     }
     if let Some(value) = nestbox_req_is_authorized(&session, &app_data, &nestbox_req).await {
         return value;
     }
-    let upload_status = app_data.image.save_files(payload).await;
+    let upload_status = app_data
+        .image
+        .save_files(
+            payload,
+            session,
+            &nestbox_req.uuid,
+            CollectionsWithImages::Nestboxes,
+        )
+        .await;
     if let Some(file_name) = upload_status {
         if app_data
             .nestbox

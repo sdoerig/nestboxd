@@ -8,7 +8,7 @@ use crate::controller::{req_structs::BirdReq, utilities::PagingQuery};
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 use mongodb::{error::Error, Collection, Database};
 
-const BREEDS: &str = "breeds";
+pub(crate) const BREEDS: &str = "breeds";
 
 #[derive(Clone)]
 pub struct BreedService {

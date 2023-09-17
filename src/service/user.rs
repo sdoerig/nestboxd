@@ -3,7 +3,7 @@ use mongodb::{Collection, Database};
 
 use sha3::{Digest, Sha3_256};
 
-const USERS: &str = "users";
+pub(crate) const USERS: &str = "users";
 
 #[derive(Clone)]
 pub struct UserService {

@@ -153,6 +153,7 @@ db.sessions.createIndex({"session_key": 2}, {"unique": true})
 db.sessions.createIndex({"session_created_at": 1}, { expireAfterSeconds: 86400 })
 db.geolocations.createIndex({"nestbox_uuid": 1})
 db.nestboxes.createIndex({"mandant_uuid":1})
+db.images.createIndex({target_uuid:1, target_collection:1, image_sha3_name:1}, {unique: true})
 ```
 
 ## Backend

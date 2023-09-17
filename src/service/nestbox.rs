@@ -8,7 +8,7 @@ use mongodb::{error::Error, Collection, Database};
 pub struct NestboxService {
     collection: Collection<Document>,
 }
-const NESTBOX: &str = "nestboxes";
+pub(crate) const NESTBOX: &str = "nestboxes";
 
 impl NestboxService {
     pub fn new(db: &Database) -> NestboxService {
