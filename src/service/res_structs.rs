@@ -105,6 +105,40 @@ impl MapDocument for BirdResponse {
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct ImageResponse {
+    // "uuid": Uuid::new_v4().to_string(),
+    // "target_uuid": &target_uuid,
+    // "target_collection": &collection,
+    // "user_uuid": session.get_user_uuid(),
+    // "mandant_uuid": session.get_mandant_uuid(),
+    // "image_name": &file_name_original,
+    // "image_sha3_name": file_name,
+    // "creation_date": DateTime::now(),
+    pub uuid: String,
+    pub target_uuid: String,
+    pub target_collection: String,
+    pub user_uuid: String,
+    pub mandant_uuid: String,
+    pub image_name: String,
+    pub image_sha3_name: String,
+    pub creation_date: String,
+}
+impl MapDocument for ImageResponse {
+    fn map_doc(doc: &Document) -> Self {
+        ImageResponse {
+            uuid: get_string_by_key(doc, "uuid"),
+            target_uuid: get_string_by_key(doc, "target_uuid"),
+            target_collection: get_string_by_key(doc, "target_collection"),
+            user_uuid: get_string_by_key(doc, "user_uuid"),
+            mandant_uuid: get_string_by_key(doc, "mandant_uuid"),
+            image_name: get_string_by_key(doc, "image_name"),
+            image_sha3_name: get_string_by_key(doc, "image_sha3_name"),
+            creation_date: get_date_time_by_key(doc, "creation_date"),
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BreedResponse {
     //{"uuid":"0b5cec76-02ac-4c6e-933e-62ebfae3e337",
     // "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
@@ -245,14 +279,82 @@ fn get_doc_by_key<'a>(doc: &'a Document, key: &str) -> Option<&'a Document> {
 mod tests {
     use std::time::{Duration, SystemTime};
 
-    use super::{BreedResponse, MapDocument};
+    use super::{BreedResponse, ImageResponse, MapDocument};
     use mongodb::bson::doc;
     use mongodb::bson::DateTime;
     const UUID: &str = "0b5cec76-02ac-4c6e-933e-62ebfae3e337";
     const NESTBOX_UUID: &str = "6f25fd00-011a-462f-aa3d-6959e6809017";
     const BIRD_UUID: &str = "ebe661d6-77ba-4bd1-bae3-9e4e7eb880a6";
+    const MANDANT_UUID: &str = "ebe661d6-77ba-4bd1-bae3-9e4e7eb880bb";
+    const IMAGE_NAME: &str = "image";
+    const IMAGE_SHA3_NAME: &str = "image_sha3";
     const BIRD_NAME: &str = "bird_17";
+    const TARGET_COLLECTION: &str = "nestboxes";
     const DISCOVERY_DATE: &str = "2021-06-01 18:36:38.989 +00:00:00";
+
+    #[actix_rt::test]
+    async fn test_image_response_from_db() {
+        let db_mock_image_doc = doc! {
+            "uuid": UUID,
+            "target_uuid": NESTBOX_UUID,
+            "target_collection": TARGET_COLLECTION,
+            "user_uuid": BIRD_UUID,
+            "mandant_uuid": MANDANT_UUID,
+            "image_name": IMAGE_NAME,
+            "image_sha3_name": IMAGE_SHA3_NAME,
+            "creation_date": DateTime::from_millis(1622572598989),
+        };
+        let image_response = ImageResponse::map_doc(&db_mock_image_doc);
+
+        assert!(
+            image_response.uuid == UUID,
+            "image_response.uuid {} should be {}",
+            image_response.uuid,
+            UUID
+        );
+        assert!(
+            image_response.target_uuid == NESTBOX_UUID,
+            "image_response.target_uuid {} should be {}",
+            image_response.target_uuid,
+            NESTBOX_UUID
+        );
+        assert!(
+            image_response.target_collection == TARGET_COLLECTION,
+            "image_response.target_collection {} should be {}",
+            image_response.target_collection,
+            TARGET_COLLECTION
+        );
+        assert!(
+            image_response.user_uuid == BIRD_UUID,
+            "image_response.user_uuid {} should be {}",
+            image_response.user_uuid,
+            BIRD_UUID
+        );
+        assert!(
+            image_response.mandant_uuid == MANDANT_UUID,
+            "image_response.mandant_uuid {} should be {}",
+            image_response.mandant_uuid,
+            MANDANT_UUID
+        );
+        assert!(
+            image_response.image_name == IMAGE_NAME,
+            "image_response.image_name {} should be {}",
+            image_response.image_name,
+            IMAGE_NAME
+        );
+        assert!(
+            image_response.image_sha3_name == IMAGE_SHA3_NAME,
+            "image_response.image_sha3_name {} should be {}",
+            image_response.image_sha3_name,
+            IMAGE_SHA3_NAME
+        );
+        assert!(
+            image_response.creation_date == DISCOVERY_DATE,
+            "image_response.creation_date {} should be {}",
+            image_response.creation_date,
+            DISCOVERY_DATE
+        );
+    }
 
     #[actix_rt::test]
     async fn test_breed_response_from_db() {

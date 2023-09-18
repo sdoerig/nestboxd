@@ -31,6 +31,7 @@ pub enum CollectionsWithImages {
 
 // Having the structure:
 // _id:             ObjectId
+
 // target_uuid:     uuid
 // collection:      str
 // user_uuid:       uuid
@@ -86,17 +87,18 @@ impl ImageService {
                 if fm.is_ok() {
                     file_names.push(file_name.clone());
                     let image = doc! {
+                                        "uuid": Uuid::new_v4().to_string(),
                                         "target_uuid": &target_uuid,
                                         "target_collection": &collection,
                                         "user_uuid": session.get_user_uuid(),
                                         "mandant_uuid": session.get_mandant_uuid(),
                                         "image_name": &file_name_original,
                                         "image_sha3_name": file_name,
-                                        "discovery_date": DateTime::now(),
+                                        "creation_date": DateTime::now(),
                     };
                     match self.collection.insert_one(&image, None).await {
                         Ok(_o) => "",
-                        Err(e) => "",
+                        Err(_e) => "",
                     };
                 } else if std::fs::remove_file(&path).is_ok() {
                 }
