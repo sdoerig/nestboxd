@@ -2,17 +2,17 @@ use actix_multipart::form::MultipartForm;
 
 use infer;
 use mongodb::bson::{doc, DateTime, Document};
-use mongodb::{Collection, Database};
+use mongodb::{error::Error, Collection, Database};
 use uuid::Uuid;
 //use sha2::{Digest};
 use std::fs::File;
 
 use std::io::{BufReader, Read};
 
-use sha3::{Digest, Sha3_256};
-
+use super::res_structs::{ImageResponse, MapDocument};
 use crate::controller::req_structs::UploadForm;
 use crate::controller::utilities::SessionObject;
+use sha3::{Digest, Sha3_256};
 
 use super::bird::BIRDS;
 use super::breed::BREEDS;
@@ -59,7 +59,7 @@ impl ImageService {
         session: SessionObject,
         target_uuid: &str,
         target_collection: CollectionsWithImages,
-    ) -> Option<Vec<String>> {
+    ) -> Option<ImageResponse> {
         let mut file_names: Vec<String> = Vec::new();
         let collection = match target_collection {
             CollectionsWithImages::Birds => BIRDS,
@@ -82,29 +82,64 @@ impl ImageService {
                     sha3_checksum.unwrap(),
                     kind.unwrap().unwrap().extension()
                 );
-                let checksummed_path = format!("{}/{}", &self.image_directory, &file_name);
-                let fm = std::fs::rename(&path, &checksummed_path);
-                if fm.is_ok() {
-                    file_names.push(file_name.clone());
-                    let image = doc! {
-                                        "uuid": Uuid::new_v4().to_string(),
-                                        "target_uuid": &target_uuid,
-                                        "target_collection": &collection,
-                                        "user_uuid": session.get_user_uuid(),
-                                        "mandant_uuid": session.get_mandant_uuid(),
-                                        "image_name": &file_name_original,
-                                        "image_sha3_name": file_name,
-                                        "creation_date": DateTime::now(),
-                    };
-                    match self.collection.insert_one(&image, None).await {
-                        Ok(_o) => "",
-                        Err(_e) => "",
-                    };
-                } else if std::fs::remove_file(&path).is_ok() {
+                if let Some(value) = self
+                    .find_one_image(target_uuid, collection, &file_name)
+                    .await
+                {
+                    return Some(value);
+                } else {
+                    let checksummed_path = format!("{}/{}", &self.image_directory, &file_name);
+                    let fm = std::fs::rename(&path, &checksummed_path);
+                    if fm.is_ok() {
+                        file_names.push(file_name.clone());
+                        let image = doc! {
+                                            "uuid": Uuid::new_v4().to_string(),
+                                            "target_uuid": &target_uuid,
+                                            "target_collection": &collection,
+                                            "user_uuid": session.get_user_uuid(),
+                                            "mandant_uuid": session.get_mandant_uuid(),
+                                            "image_name": &file_name_original,
+                                            "image_sha3_name": file_name,
+                                            "creation_date": DateTime::now(),
+                        };
+                        match self.collection.insert_one(&image, None).await {
+                            Ok(_o) => "",
+                            Err(_e) => "",
+                        };
+                    } else if std::fs::remove_file(&path).is_ok() {
+                    }
                 }
+                return self
+                    .find_one_image(target_uuid, collection, &file_name)
+                    .await;
             }
         }
-        Some(file_names)
+        None
+        Some(())
+    }
+
+    async fn find_one_image(
+        &self,
+        target_uuid: &str,
+        collection: &str,
+        file_name: &String,
+    ) -> Option<ImageResponse> {
+        match self
+            .collection
+            .find_one(
+                doc! { "target_uuid": &target_uuid,
+                "target_collection": &collection,
+                "image_sha3_name": &file_name},
+                None,
+            )
+            .await
+        {
+            Ok(doc) => match doc {
+                Some(doc) => return Some(ImageResponse::map_doc(&doc)),
+                None => return None,
+            },
+            Err(_) => return None,
+        };
     }
 }
 
